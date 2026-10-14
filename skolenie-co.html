@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Školenie civilnej ochrany</title>
+<style>
+
+  /* ============================================================
+     NASTAVENIA — uprav podľa potreby
+     ============================================================ */
+
+  :root{
+    --bg: #10151b;
+    --panel: #1a222b;
+    --panel-2: #212b35;
+    --line: #2c3742;
+    --ink: #e9edf1;
+    --ink-dim: #8fa0ac;
+    --amber: #f0a63c;
+    --amber-dim: #7a5a26;
+    --teal: #4f9d8d;
+    --rust: #c15a3e;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap{
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 36px 20px 80px;
+  }
+
+  header.top{
+    margin-bottom: 28px;
+  }
+
+  h1{
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+
+  .sub{
+    color: var(--ink-dim);
+    font-size: 0.92rem;
+    margin: 0 0 26px;
+  }
+
+  /* step rail */
+  .rail{
+    display:flex;
+    align-items:center;
+    gap: 0;
+  }
+  .step{
+    display:flex; align-items:center; gap:10px;
+    color: var(--ink-dim);
+    font-size: 0.82rem;
+  }
+  .dot{
+    width:9px; height:9px; border-radius:50%;
+    background: var(--line);
+    flex: none;
+    transition: background .3s ease, box-shadow .3s ease;
+  }
+  .rule{
+    flex:1; height:1px; background: var(--line);
+    margin: 0 12px;
+    transition: background .4s ease;
+  }
+  .step.active{ color: var(--ink); }
+  .step.active .dot{ background: var(--amber); box-shadow: 0 0 0 4px rgba(240,166,60,.15); }
+  .step.done .dot{ background: var(--teal); }
+  .rail.p2 .rule:first-of-type,
+  .rail.p3 .rule{ background: var(--teal); }
+
+  section{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    margin-top: 18px;
+  }
+
+  section h2{
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  section p.hint{
+    color: var(--ink-dim);
+    font-size: 0.87rem;
+    margin: 0 0 18px;
+  }
+
+  label{ font-size: 0.85rem; color: var(--ink-dim); display:block; margin-bottom:6px; }
+  input[type=text]{
+    width:100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 10px 12px;
+    border-radius: 7px;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+  }
+  input[type=text]:focus{ outline: 2px solid var(--amber-dim); border-color: var(--amber); }
+
+  .video-frame{
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .video-frame video, .video-frame iframe{
+    width:100%; height:100%; display:block; border:0;
+  }
+  .video-note{
+    margin-top: 12px;
+    font-size: 0.83rem;
+    color: var(--ink-dim);
+  }
+  .video-note.watched{ color: var(--teal); }
+
+  /* locked quiz */
+  #quizSection.locked{
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(0.4);
+  }
+  .lock-banner{
+    display:flex; align-items:center; gap:10px;
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+    padding: 10px 0 0;
+  }
+
+  .q{
+    border-top: 1px solid var(--line);
+    padding: 18px 0;
+  }
+  .q:first-of-type{ border-top: none; padding-top: 0; }
+  .q .qtext{ font-size: 0.95rem; margin-bottom: 12px; font-weight: 550;}
+  .opt{
+    display:flex; align-items: flex-start; gap: 10px;
+    padding: 9px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+  .opt:hover{ background: var(--panel-2); }
+  .opt input{ margin-top: 2px; }
+  .opt.correct{ border-color: var(--teal); background: rgba(79,157,141,.12); }
+  .opt.incorrect{ border-color: var(--rust); background: rgba(193,90,62,.12); }
+  .explain{
+    font-size: 0.83rem; color: var(--ink-dim);
+    margin-top: 8px; padding-left: 2px;
+  }
+
+  button.primary{
+    background: var(--amber);
+    color: #221704;
+    border: none;
+    font-weight: 650;
+    font-size: 0.92rem;
+    padding: 11px 20px;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  button.primary:disabled{
+    background: var(--line);
+    color: var(--ink-dim);
+    cursor: not-allowed;
+  }
+  button.ghost{
+    background: transparent;
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+    font-size: 0.87rem;
+    padding: 9px 16px;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+
+  #resultSection{ text-align:center; }
+  .score{
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin: 6px 0 2px;
+  }
+  .verdict{
+    display:inline-block;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  .verdict.pass{ background: rgba(79,157,141,.18); color: var(--teal); }
+  .verdict.fail{ background: rgba(193,90,62,.18); color: var(--rust); }
+
+  .meta{
+    text-align:left;
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    border-top: 1px solid var(--line);
+    margin-top: 18px;
+    padding-top: 14px;
+    line-height: 1.7;
+  }
+  .meta b{ color: var(--ink); font-weight: 600; }
+
+  .actions{ display:flex; gap:10px; justify-content:center; margin-top: 18px; }
+
+  @media print{
+    body *{ visibility: hidden; }
+    #resultSection, #resultSection *{ visibility: visible; }
+    #resultSection{ position: absolute; top:0; left:0; width:100%; border:none; }
+    .actions{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Školenie: Civilná ochrana obyvateľstva</h1>
+    <p class="sub">Pozrite si video a následne vyplňte krátky test.</p>
+    <div class="rail" id="rail">
+      <div class="step active" data-step="1"><span class="dot"></span>Video</div>
+      <div class="rule"></div>
+      <div class="step" data-step="2"><span class="dot"></span>Test</div>
+      <div class="rule"></div>
+      <div class="step" data-step="3"><span class="dot"></span>Potvrdenie</div>
+    </div>
+  </header>
+
+  <section id="videoSection">
+    <h2>1. Školiace video</h2>
+    <p class="hint">Video sa musí prehrať celé — test sa sprístupní až po jeho skončení.</p>
+
+    <label for="empName">Meno a priezvisko zamestnanca *</label>
+    <input type="text" id="empName" placeholder="napr. Ján Novák" required>
+    <p class="video-note" id="nameError" style="display:none; color: var(--rust); margin-top:-14px; margin-bottom:16px;">
+      Prosím, vyplňte meno a priezvisko.
+    </p>
+
+    <label for="empDept">Oddelenie / pracovisko (nepovinné)</label>
+    <input type="text" id="empDept" placeholder="napr. Výroba, Bratislava">
+
+    <div class="video-frame">
+      <video id="trainingVideo" controls controlsList="nodownload" playsinline>
+        <source id="videoSrc" src="" type="video/mp4">
+        Váš prehliadač nepodporuje prehrávanie videa.
+      </video>
+    </div>
+    <p class="video-note" id="videoNote">Video ešte nebolo dopozreté.</p>
+  </section>
+
+  <section id="quizSection" class="locked">
+    <h2>2. Test</h2>
+    <p class="hint">Na úspešné absolvovanie potrebujete aspoň 75&nbsp;% správnych odpovedí.</p>
+    <div class="lock-banner" id="lockBanner">🔒 Najprv dopozrite video vyššie.</div>
+    <div id="quizBody"></div>
+    <button class="primary" id="submitBtn" disabled>Vyhodnotiť test</button>
+  </section>
+
+  <section id="resultSection" style="display:none;">
+    <h2>3. Potvrdenie o absolvovaní</h2>
+    <div class="score" id="scoreText">0 / 0</div>
+    <div class="verdict" id="verdictBadge">—</div>
+    <div class="meta">
+      <div><b>Meno:</b> <span id="metaName">—</span></div>
+      <div><b>Oddelenie:</b> <span id="metaDept">—</span></div>
+      <div><b>Školenie:</b> Civilná ochrana obyvateľstva</div>
+      <div><b>Dátum:</b> <span id="metaDate">—</span></div>
+    </div>
+    <p class="video-note" id="saveNote" style="margin-top:14px;"></p>
+    <div class="actions">
+      <button class="ghost" id="downloadBtn">Stiahnuť záznam (.txt)</button>
+      <button class="ghost" id="emailBtn">Odoslať e-mailom</button>
+    </div>
+    <div class="actions">
+      <button class="ghost" id="printBtn">Vytlačiť potvrdenie</button>
+      <button class="ghost" id="restartBtn">Spustiť pre ďalšieho zamestnanca</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   NASTAVENIA ŠKOLENIA — uprav tieto hodnoty
+   ============================================================ */
+const CONFIG = {
+  // Odkaz na video (priamy .mp4 súbor: vlastný hosting, SharePoint, Google Drive
+  // s priamym prístupom a pod.). Vlož sem svoju URL.
+  videoUrl: "Skolenie-CO-2026.mp4",
+
+  // Minimálna úspešnosť na "vyhovel" (0.75 = 75 %)
+  passThreshold: 0.75,
+
+  // E-mail, na ktorý sa má poslať výsledok (napr. HR alebo zodpovedná osoba za CO)
+  hrEmail: "lv.informatik@uvzsr.sk",
+
+  // Otázky testu
+  questions: [
+    {
+      q: "Akým tónom sirény sa vykonáva pravidelná (mesačná) skúška sirén?",
+      options: [
+        "Kolísavým tónom počas 2 minút",
+        "Stálym (nepretržitým) tónom počas 2 minút",
+        "Troma krátkymi zvukovými signálmi",
+        "Skúška sa vykonáva len rozhlasom, bez sirén"
+      ],
+      correct: 1,
+      explain: "Pravidelná skúška sirén sa vykonáva 2-minútovým stálym tónom, zvyčajne v presne určený deň a hodinu."
+    },
+    {
+      q: "Aký tón sirény signalizuje skutočné všeobecné ohrozenie?",
+      options: [
+        "Stály tón počas 2 minút",
+        "Kolísavý (striedavý) tón počas 2 minút",
+        "Iba SMS správa, siréna sa nepoužíva",
+        "Neprerušovaný tón počas 6 minút"
+      ],
+      correct: 1,
+      explain: "Skutočné ohrozenie signalizuje kolísavý tón sirény v trvaní 2 minút, na rozdiel od stáleho tónu pri skúške."
+    },
+    {
+      q: "Čo by ste mali urobiť hneď po zaznení varovného signálu?",
+      options: [
+        "Pokračovať v práci a čakať na ústny pokyn",
+        "Zapnúť rozhlas/TV alebo sledovať oficiálne kanály a riadiť sa pokynmi",
+        "Okamžite odísť autom mimo mesta",
+        "Zavolať rodine a čakať na jej príchod na pracovisko"
+      ],
+      correct: 1,
+      explain: "Po varovnom signáli treba sledovať oficiálne informačné kanály (rozhlas, TV, mobilné aplikácie) a riadiť sa pokynmi príslušných orgánov."
+    },
+    {
+      q: "Kedy sa spravidla uprednostňuje ukrytie pred evakuáciou?",
+      options: [
+        "Vždy, keď prší",
+        "Pri úniku nebezpečnej látky, keď nie je čas na bezpečný odsun osôb",
+        "Ukrytie sa na pracovisku nikdy nevyužíva",
+        "Len počas nočných hodín"
+      ],
+      correct: 1,
+      explain: "Ukrytie sa uprednostňuje najmä pri náhlom ohrození (napr. únik chemickej látky), keď evakuácia von z priestoru by bola nebezpečnejšia."
+    },
+    {
+      q: "Čo je evakuácia?",
+      options: [
+        "Organizovaný presun ohrozených osôb do bezpečnejších priestorov",
+        "Pravidelná kontrola sirén",
+        "Upratovanie pracoviska po mimoriadnej udalosti",
+        "Školenie zamestnancov o prvej pomoci"
+      ],
+      correct: 0,
+      explain: "Evakuácia je organizovaný, riadený presun osôb (prípadne majetku) z ohrozeného územia do bezpečia."
+    },
+    {
+      q: "Čo označuje pojem sebaochrana?",
+      options: [
+        "Výlučne povinnosť štátu chrániť občanov",
+        "Pomoc vlastnými silami a prostriedkami zameraná na ochranu seba a najbližšieho okolia",
+        "Iný názov pre evakuačnú batožinu",
+        "Vojenský výcvik zamestnancov"
+      ],
+      correct: 1,
+      explain: "Sebaochrana znamená schopnosť a pripravenosť chrániť seba a svoje okolie vlastnými silami do príchodu záchranných zložiek."
+    },
+    {
+      q: "Aké je jednotné európske tiesňové číslo, na ktoré treba volať pri mimoriadnej udalosti?",
+      options: [
+        "158",
+        "112",
+        "150",
+        "18300"
+      ],
+      correct: 1,
+      explain: "112 je jednotné tiesňové číslo platné v celej EÚ, cez ktoré sa dovoláte na všetky záchranné zložky (hasiči, záchranná služba, polícia)."
+    },
+    {
+      q: "Čo urobíme s osobou, ktorá je v bezvedomí, ale normálne dýcha?",
+      options: [
+        "Necháme ju ležať na chrbte a odídeme privolať pomoc",
+        "Okamžite začneme s nepriamou masážou srdca",
+        "Uložíme ju do stabilizovanej polohy a sledujeme dýchanie do príchodu pomoci",
+        "Posadíme ju a dáme jej piť vodu"
+      ],
+      correct: 2,
+      explain: "Ak postihnutý dýcha, ale je v bezvedomí, uloží sa do stabilizovanej polohy, aby sa predišlo zaduseniu, a priebežne sa sleduje jeho dýchanie."
+    }
+  ]
+};
+/* ============================================================ */
+
+let watched = false;
+let maxWatchedTime = 0;
+
+document.getElementById('empName').addEventListener('input', (e) => {
+  if (e.target.value.trim()) {
+    document.getElementById('nameError').style.display = 'none';
+    e.target.style.borderColor = '';
+  }
+});
+
+const video = document.getElementById('trainingVideo');
+const videoSrc = document.getElementById('videoSrc');
+const videoNote = document.getElementById('videoNote');
+const quizSection = document.getElementById('quizSection');
+const lockBanner = document.getElementById('lockBanner');
+const quizBody = document.getElementById('quizBody');
+const submitBtn = document.getElementById('submitBtn');
+const rail = document.getElementById('rail');
+
+if (CONFIG.videoUrl) {
+  videoSrc.src = CONFIG.videoUrl;
+  video.load();
+} else {
+  videoNote.textContent = "⚠ Video nie je nastavené. Doplňte CONFIG.videoUrl v kóde súboru.";
+}
+
+// build quiz DOM (hidden behind lock until watched)
+CONFIG.questions.forEach((item, qi) => {
+  const qDiv = document.createElement('div');
+  qDiv.className = 'q';
+  qDiv.innerHTML = `<div class="qtext">${qi + 1}. ${item.q}</div>`;
+  item.options.forEach((opt, oi) => {
+    const label = document.createElement('label');
+    label.className = 'opt';
+    label.innerHTML = `<input type="radio" name="q${qi}" value="${oi}"> <span>${opt}</span>`;
+    qDiv.appendChild(label);
+  });
+  const explain = document.createElement('div');
+  explain.className = 'explain';
+  explain.style.display = 'none';
+  explain.id = `explain${qi}`;
+  explain.textContent = item.explain;
+  qDiv.appendChild(explain);
+  quizBody.appendChild(qDiv);
+});
+
+function setStep(n) {
+  rail.className = 'rail p' + n;
+  document.querySelectorAll('.step').forEach(s => {
+    const step = parseInt(s.dataset.step);
+    s.classList.toggle('active', step === n);
+    s.classList.toggle('done', step < n);
+  });
+}
+
+// prevent skipping ahead: track furthest watched point
+video.addEventListener('timeupdate', () => {
+  if (video.currentTime > maxWatchedTime) maxWatchedTime = video.currentTime;
+});
+video.addEventListener('seeking', () => {
+  if (video.currentTime > maxWatchedTime + 0.75) {
+    video.currentTime = maxWatchedTime;
+  }
+});
+
+video.addEventListener('ended', () => {
+  watched = true;
+  quizSection.classList.remove('locked');
+  lockBanner.style.display = 'none';
+  submitBtn.disabled = false;
+  videoNote.textContent = "✓ Video dopozreté — test je odomknutý.";
+  videoNote.classList.add('watched');
+  setStep(2);
+  quizSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+submitBtn.addEventListener('click', () => {
+  if (!watched) return;
+
+  const nameInput = document.getElementById('empName');
+  const nameError = document.getElementById('nameError');
+  if (!nameInput.value.trim()) {
+    nameError.style.display = 'block';
+    nameInput.style.borderColor = 'var(--rust)';
+    nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    nameInput.focus();
+    return;
+  } else {
+    nameError.style.display = 'none';
+    nameInput.style.borderColor = '';
+  }
+
+  let correctCount = 0;
+  let allAnswered = true;
+
+  CONFIG.questions.forEach((item, qi) => {
+    const selected = document.querySelector(`input[name="q${qi}"]:checked`);
+    const opts = quizBody.querySelectorAll(`.q:nth-of-type(${qi + 1}) .opt`);
+    if (!selected) { allAnswered = false; return; }
+
+    const chosen = parseInt(selected.value);
+    opts.forEach((optEl, oi) => {
+      optEl.classList.remove('correct', 'incorrect');
+      if (oi === item.correct) optEl.classList.add('correct');
+      else if (oi === chosen) optEl.classList.add('incorrect');
+    });
+    document.getElementById(`explain${qi}`).style.display = 'block';
+
+    if (chosen === item.correct) correctCount++;
+  });
+
+  if (!allAnswered) {
+    alert('Prosím, odpovedzte na všetky otázky.');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Vyhodnotené';
+
+  const total = CONFIG.questions.length;
+  const ratio = correctCount / total;
+  const passed = ratio >= CONFIG.passThreshold;
+
+  const name = document.getElementById('empName').value.trim() || 'nevyplnené';
+  const dept = document.getElementById('empDept').value.trim() || 'neuvedené';
+  const dateStr = new Date().toLocaleDateString('sk-SK');
+
+  lastResult = { name, dept, dateStr, correctCount, total, ratio, passed };
+
+  setTimeout(() => {
+    document.getElementById('resultSection').style.display = 'block';
+    document.getElementById('scoreText').textContent = `${correctCount} / ${total}`;
+    const badge = document.getElementById('verdictBadge');
+    badge.textContent = passed ? 'Vyhovel(a)' : 'Nevyhovel(a) — opakujte test';
+    badge.className = 'verdict ' + (passed ? 'pass' : 'fail');
+
+    document.getElementById('metaName').textContent = name;
+    document.getElementById('metaDept').textContent = dept;
+    document.getElementById('metaDate').textContent = dateStr;
+
+    setStep(3);
+    document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 900);
+});
+
+let lastResult = null;
+
+function buildRecordText() {
+  if (!lastResult) return '';
+  const r = lastResult;
+  let lines = [
+    'ZÁZNAM O ABSOLVOVANÍ ŠKOLENIA',
+    'Školenie: Civilná ochrana obyvateľstva',
+    '----------------------------------------',
+    `Meno a priezvisko: ${r.name}`,
+    `Oddelenie / pracovisko: ${r.dept}`,
+    `Dátum: ${r.dateStr}`,
+    `Výsledok: ${r.correctCount} / ${r.total} (${Math.round(r.ratio * 100)} %)`,
+    `Stav: ${r.passed ? 'VYHOVEL(A)' : 'NEVYHOVEL(A) — potrebné zopakovať'}`,
+    '',
+    'Podrobné odpovede:'
+  ];
+  CONFIG.questions.forEach((item, qi) => {
+    const selected = document.querySelector(`input[name="q${qi}"]:checked`);
+    const chosenIdx = selected ? parseInt(selected.value) : -1;
+    const chosenText = chosenIdx >= 0 ? item.options[chosenIdx] : '(bez odpovede)';
+    const ok = chosenIdx === item.correct ? 'správne' : 'nesprávne';
+    lines.push(`${qi + 1}. ${item.q}`);
+    lines.push(`   Odpoveď: ${chosenText} (${ok})`);
+  });
+  return lines.join('\n');
+}
+
+function slugify(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'zamestnanec';
+}
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  if (!lastResult) return;
+  const text = buildRecordText();
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CO-skolenie_${slugify(lastResult.name)}_${lastResult.dateStr.replace(/\./g,'-')}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  document.getElementById('saveNote').textContent = '✓ Záznam bol stiahnutý. Uložte ho na zdieľané miesto pre kontrolu.';
+  document.getElementById('saveNote').classList.add('watched');
+});
+
+document.getElementById('emailBtn').addEventListener('click', () => {
+  if (!lastResult) return;
+  if (!CONFIG.hrEmail) {
+    alert('E-mail príjemcu nie je nastavený. Doplňte CONFIG.hrEmail v kóde súboru.');
+    return;
+  }
+  const r = lastResult;
+  const subject = `Školenie CO - výsledok - ${r.name}`;
+  const body =
+`Meno a priezvisko: ${r.name}
+Oddelenie: ${r.dept}
+Dátum: ${r.dateStr}
+Výsledok: ${r.correctCount} / ${r.total} (${Math.round(r.ratio * 100)} %)
+Stav: ${r.passed ? 'VYHOVEL(A)' : 'NEVYHOVEL(A)'}
+
+(Podrobný záznam nájdete v priloženom stiahnutom súbore.)`;
+  window.location.href = `mailto:${CONFIG.hrEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+});
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  location.reload();
+});
+</script>
+</body>
+</html>
